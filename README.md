@@ -2,7 +2,7 @@
 
 This project is based on Polymer 2.0
 
-[Demo Here](https://hectorguo.com/smartcar-component)
+[Demo Here](https://hectorguo.com/smartcar-component/)
 
 ## Usage
 
