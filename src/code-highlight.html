@@ -1,0 +1,62 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+-->
+<html>
+<head>
+  <link rel="import" href="../polymer-element.html">
+  <link rel="import" href="../polymer.html">
+  <script src="../lib/highlight.pack.js" async></script>
+</head>
+
+<body>
+  <dom-module id="code-highlight">
+    <link rel="import" type="css" href="../lib/highlight.style.github.css">
+    <template>
+      <style>
+         :host {
+          display: block;
+        }
+      </style>
+      <pre hidden="{{isEmpty}}"><code id="code" class="[[lang]]">[[content]]</code></pre>
+    </template>
+    <script>
+      class CodeHighlight extends Polymer.Element {
+        static get is() { return 'code-highlight'; }
+        static get properties() {
+          return {
+            lang: {
+              type: String,
+              value: 'json' // default, used for smartcar api
+            },
+            content: {
+              type: String,
+              value: '',
+              observer: '_contentChanged'
+            },
+            isEmpty: {
+              type: Boolean,
+              computed: 'isContentEmpty(content)'
+            }
+          }
+        }
+
+        // highlight code
+        _contentChanged(newVal, oldVal) {
+          if (!this.isEmpty) {
+            this.$.code.textContent = newVal;
+            hljs.highlightBlock(this.$.code);
+          }
+        }
+
+        // ignore empty string
+        isContentEmpty(content) {
+          return !content || !content.trim();
+        }
+      }
+      window.customElements.define(CodeHighlight.is, CodeHighlight);
+    </script>
+  </dom-module>
+</body>
+
+</html>

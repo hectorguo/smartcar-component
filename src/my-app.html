@@ -1,0 +1,72 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+-->
+<html>
+<head>
+  <link rel="import" href="../polymer-element.html">
+  <link rel="import" href="smartcar-api.html">
+</head>
+
+<body>
+  <dom-module id="my-app">
+    <template>
+      <smartcar-api request="[[case1]]"></smartcar-api>
+      <smartcar-api request="[[case2]]"></smartcar-api>
+      <smartcar-api request="[[case3]]"></smartcar-api>
+    </template>
+
+    <script>
+      class MyApp extends Polymer.Element {
+        static get is() { return 'my-app'; }
+        constructor() {
+          super();
+          this.case1 = {
+            url: 'https://jsonplaceholder.typicode.com/posts',
+            method: 'POST',
+            headers: {
+              Authorization: 'Bearer eawke!ddxaweaarglebargleaw,1',
+              'Content-Type': 'application/json'
+            },
+            body: [
+              {
+                name: 'email',
+                type: 'email',
+                max: 24,
+                min: 3,
+              },
+              {
+                name: 'full-name',
+                type: 'text',
+                placeholder: 'John Doe',
+                required: true,
+              },
+              {
+                name: 'phone',
+                type: 'tel',
+                pattern: '\\d{3}-\\d{4}',
+              },
+            ]
+          }
+
+          this.case2 = {
+            url: 'https://jsonplaceholder.typicode.com/posts/1/comments',
+            method: 'GET',
+            headers: {
+              Charset: 'UTF-8',
+            },
+          }
+
+          this.case3 = {
+            url: 'https://jsonplaceholder.typicode.com/posts/1',
+            method: 'DELETE'
+          }
+        }
+      }
+
+      window.customElements.define(MyApp.is, MyApp);
+    </script>
+  </dom-module>
+</body>
+
+</html>

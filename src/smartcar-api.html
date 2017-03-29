@@ -1,0 +1,88 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+Modified by Hector Guo 2017-03-28
+-->
+<html>
+<head>
+  <link rel="import" href="../polymer-element.html">
+  <link rel="import" href="smartcar-api-request.html">
+  <link rel="import" href="code-highlight.html">
+  <link rel="import" href="shared-styles.html">
+</head>
+
+<body>
+  <dom-module id="smartcar-api">
+    <template>
+      <style include="shared-styles">
+         :host {
+          display: block;
+        }
+        
+        .container {
+          min-height: 30px;
+          background: #f8f8f8;
+        }
+      </style>
+
+      <div class="card">
+        <!--Request-->
+        <smartcar-api-request
+          url="[[request.url]]"
+          method="[[request.method]]"
+          headers$="[[request.headers]]"
+          body="[[request.body]]"
+          on-sending="loading"
+          on-send-success="onSendSuccess"
+          on-send-fail="onSendFail"></smartcar-api-request>
+
+        <!--Response-->
+        <h3>Response</h3>
+        <p class="container" hidden$="[[!isLoading]]">Loading...</p>
+        <p class="container" hidden$="[[isLoading]]">
+          <code-highlight content="[[stringify(response)]]"></code-highlight>
+        </p>
+      </div>
+    </template>
+
+    <script>
+      class SmartcarApi extends Polymer.Element {
+        static get is() { return 'smartcar-api'; }
+        static get properties() {
+          return {
+            request: {
+              type: Object
+            }
+          }
+        }
+
+        constructor() {
+          super();
+          this.isLoading = false;
+          this.response = '';
+        }
+        stringify(obj) {
+          return obj ? JSON.stringify(obj, null, 2) : ''; // spacing level 2
+        }
+
+        onSendSuccess(e) {
+          this.set('response', e.detail);
+          this.isLoading = false;
+        }
+
+        onSendFail(e) {
+          this.set('response', e.detail.message);
+          this.isLoading = false;
+        }
+
+        loading() {
+          this.isLoading = true;
+        }
+      }
+
+      window.customElements.define(SmartcarApi.is, SmartcarApi);
+    </script>
+  </dom-module>
+</body>
+
+</html>

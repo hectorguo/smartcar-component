@@ -1,0 +1,235 @@
+<!--
+@license
+Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
+Modified by Hector Guo 2017-03-28
+-->
+<html>
+<head>
+  <link rel="import" href="../polymer-element.html">
+  <link rel="import" href="../polymer.html">
+  <link rel="import" href="code-highlight.html">
+  <link rel="import" href="shared-styles.html">
+</head>
+
+<body>
+  <dom-module id="smartcar-api-request">
+    <template>
+      <style include="shared-styles">
+         :host {
+          display: block;
+          padding: 10px;
+        }
+        
+        input {
+          border: 2px solid white;
+          margin: 2px;
+        }
+        
+        input:focus {
+          outline: none;
+        }
+        
+        input:valid {
+          border-bottom-color: var(--input-valid-color);
+        }
+        
+        input:invalid {
+          border-bottom-color: var(--input-invalid-color);
+        }
+        
+        ul,li {
+          list-style: none;
+        }
+        
+        .method {
+          color: white;
+          padding: 10px;
+          border-radius: 5px;
+        }
+        
+        .post {
+          background: var(--btn-post-color);
+        }
+        
+        .get {
+          background: var(--btn-get-color);
+        }
+        
+        .put {
+          background: var(--btn-put-color);
+        }
+        
+        .patch {
+          background: var(--btn-patch-color);
+        }
+        
+        .delete {
+          background: var(--btn-delete-color);
+        }
+      </style>
+
+      <form id="form" on-submit="send">
+        <!--URL & METHOD-->
+        <h3><span class$="method [[methodClassName]]">{{method}}</span> {{url}}</h3>
+
+        <!--HEADER-->
+        <h4>Headers</h4>
+        <code-highlight content="{{beautify(finalHeaders)}}"></code-highlight>
+
+        <!--BODY-->
+        <template is="dom-if" if="{{!isBodyEmpty(body)}}">
+          <h4>Body</h4>
+          <ul>
+            <template is="dom-repeat" items="[[body]]">
+              <li>
+                <label for$="item_[[index]]">[[item.name]]:</label>
+
+                <!--lots of input attributes need to be config-->
+                <input id$="item_[[index]]"
+                  aria-labelledby$="[[item._ariaLabelledBy]]"
+                  aria-describedby$="[[item._ariaDescribedBy]]"
+                  disabled$="[[item.disabled]]"
+                  title$="[[item.title]]"
+                  value="{{item.value::input}}"
+                  invalid="{{invalid}}"
+                  prevent-invalid-input="[[item.preventInvalidInput]]"
+                  allowed-pattern="[[item.allowedPattern]]"
+                  validator="[[item.validator]]"
+                  type$="[[item.type]]"
+                  pattern$="[[item.pattern]]"
+                  required$="[[item.required]]"
+                  autocomplete$="[[item.autocomplete]]"
+                  autofocus$="[[item.autofocus]]"
+                  inputmode$="[[item.inputmode]]"
+                  minlength$="[[item.minlength]]"
+                  maxlength$="[[item.maxlength]]"
+                  min$="[[item.min]]"
+                  max$="[[item.max]]"
+                  step$="[[item.step]]"
+                  name$="[[item.name]]"
+                  placeholder$="[[item.placeholder]]"
+                  readonly$="[[item.readonly]]"
+                  list$="[[item.list]]"
+                  size$="[[item.size]]"
+                  autocapitalize$="[[item.autocapitalize]]"
+                  autocorrect$="[[item.autocorrect]]"
+                  tabindex$="[[item.tabindex]]"
+                  autosave$="[[item.autosave]]"
+                  results$="[[item.results]]"
+                  accept$="[[item.accept]]"
+                  multiple$="[[item.multiple]]">
+              </li>
+            </template>
+          </ul>
+        </template>
+
+        <!--Submit Form Button-->
+        <button>Send</button>
+      </form>
+    </template>
+
+    <script>
+      class SmartcarApiReq extends Polymer.Element {
+        static get is() { return 'smartcar-api-request'; }
+        static get properties() {
+          return {
+            url: {
+              type: String,
+              value: ''
+            },
+            method: {
+              type: String,
+              value: 'GET'
+            },
+            headers: {
+              type: Object,
+              value: function() { return {}; }
+            },
+            body: {
+              type: Array,
+              notify: true
+            },
+            // computed headers - combine content-type to headers
+            finalHeaders: {
+              type: Object,
+              computed: '_combineHeaders(headers)'
+            },
+            methodClassName: {
+              type: String,
+              computed: '_lowerCase(method)'
+            }
+          }
+        }
+
+        // add default params into headers
+        _combineHeaders(headers) {
+          return Object.assign(headers || {}, { 'Content-Type': 'application/json' });
+        }
+
+        // transfer class name to lowercase
+        _lowerCase(str) {
+          return str.toLowerCase();
+        }
+
+        // check if body array is empty
+        isBodyEmpty(body) {
+          return !body || !body.length;
+        }
+
+        // get key and value of request body 
+        getBodyValues(body) {
+          if (this.isBodyEmpty(body)) {
+            return '';
+          }
+
+          const keyPair = {};
+          body.forEach((item) => {
+            keyPair[item.name] = item.value;
+          });
+
+          return keyPair;
+        }
+
+        // transfer object to json string and add indent for highlighting code
+        beautify(obj) {
+          return JSON.stringify(obj, null, 2);
+        }
+
+        // Send request when inputs are valid
+        send(e) {
+          e.preventDefault(); // prevent default form submit action
+
+          let requestOpt = {
+            method: this.method,
+            headers: this.finalHeaders
+          }
+
+          const bodyValues = this.getBodyValues(this.body);
+
+          // There is no body in GET Method
+          if (bodyValues && this.method !== 'GET') {
+            requestOpt.body = JSON.stringify(bodyValues);
+          }
+
+          // Emit custom event: sending for loading process
+          this.dispatchEvent(new CustomEvent('sending', { bubbles: true }));
+
+          fetch(this.url, requestOpt)
+            .then((res) => res.json())
+            .then((res) => {
+              this.dispatchEvent(new CustomEvent('send-success', { detail: res, bubbles: true }))
+            })
+            .catch((err) => {
+              this.dispatchEvent(new CustomEvent('send-fail', { detail: err, bubbles: true }))
+            });
+
+          return false;
+        }
+      }
+
+      window.customElements.define(SmartcarApiReq.is, SmartcarApiReq);
+    </script>
+  </dom-module>
+</body>
+
+</html>
